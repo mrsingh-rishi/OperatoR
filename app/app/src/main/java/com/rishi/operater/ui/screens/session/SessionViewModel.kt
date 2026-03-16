@@ -1,12 +1,21 @@
 package com.rishi.operater.ui.screens.session
 
 import androidx.lifecycle.ViewModel
-import com.rishi.operater.session.AgentSessionManager
+import com.rishi.operater.agent.model.AgentSessionState
+import com.rishi.operater.core.OperatoRRuntime
 
-class SessionViewModel(
-    private val sessionManager: AgentSessionManager = AgentSessionManager(),
-) : ViewModel() {
+class SessionViewModel : ViewModel() {
     val uiState = SessionUiState(
-        status = if (sessionManager.isSessionActive()) "Active" else "Idle",
+        status = when (OperatoRRuntime.sessionManager.state.value) {
+            AgentSessionState.Idle,
+            AgentSessionState.Stopped,
+            AgentSessionState.Error,
+            -> "Idle"
+
+            AgentSessionState.Preparing,
+            AgentSessionState.Running,
+            AgentSessionState.AwaitingConfirmation,
+            -> "Active"
+        },
     )
 }
