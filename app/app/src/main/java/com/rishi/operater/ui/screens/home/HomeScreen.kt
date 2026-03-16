@@ -9,6 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.rishi.operater.data.model.AgentLifecycleStatus
+import com.rishi.operater.data.model.PermissionStatus
+import com.rishi.operater.data.model.ScreenCaptureCapabilityStatus
 
 @Composable
 fun HomeScreen(
@@ -23,13 +26,40 @@ fun HomeScreen(
     ) {
         Text(text = uiState.title, style = MaterialTheme.typography.headlineMedium)
         Text(text = uiState.subtitle, style = MaterialTheme.typography.bodyLarge)
+
         Text(
-            text = if (uiState.isAccessibilityEnabled) {
-                "Accessibility bridge is enabled."
-            } else {
-                "Accessibility bridge is not enabled yet."
-            },
+            text = "Accessibility service: ${uiState.accessibilityStatus.toLabel()}",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(
+            text = "Microphone permission: ${uiState.microphonePermissionStatus.toLabel()}",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(
+            text = "Screen capture capability: ${uiState.screenCaptureCapabilityStatus.toLabel()}",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(
+            text = "Agent session: ${uiState.agentLifecycleStatus.toLabel()}",
             style = MaterialTheme.typography.bodyMedium,
         )
     }
+}
+
+private fun PermissionStatus.toLabel(): String = when (this) {
+    PermissionStatus.NOT_REQUESTED -> "Not requested"
+    PermissionStatus.GRANTED -> "Enabled"
+    PermissionStatus.DENIED -> "Disabled"
+}
+
+private fun ScreenCaptureCapabilityStatus.toLabel(): String = when (this) {
+    ScreenCaptureCapabilityStatus.READY -> "Ready"
+    ScreenCaptureCapabilityStatus.ACTIVE -> "Active"
+    ScreenCaptureCapabilityStatus.UNAVAILABLE -> "Unavailable"
+}
+
+private fun AgentLifecycleStatus.toLabel(): String = when (this) {
+    AgentLifecycleStatus.IDLE -> "Idle"
+    AgentLifecycleStatus.RUNNING -> "Running"
+    AgentLifecycleStatus.STOPPED -> "Stopped"
 }
