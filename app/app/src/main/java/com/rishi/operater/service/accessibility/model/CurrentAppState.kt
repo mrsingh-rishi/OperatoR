@@ -7,5 +7,5 @@ data class CurrentAppState(
     val accessibilityServiceConnected: Boolean = false,
     val foregroundPackageName: String? = null,
     val rootNodeAvailable: Boolean = false,
+    val lastEventType: Int? = null,
 )
-

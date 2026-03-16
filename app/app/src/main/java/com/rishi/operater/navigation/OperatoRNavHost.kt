@@ -76,7 +76,8 @@ fun OperatoRNavHost() {
             }
             composable(route = AppDestination.Session.route) {
                 val viewModel: SessionViewModel = viewModel()
-                SessionScreen(uiState = viewModel.uiState)
+                val uiState by viewModel.uiState.collectAsState()
+                SessionScreen(uiState = uiState)
             }
             composable(route = AppDestination.Settings.route) {
                 val viewModel: SettingsViewModel = viewModel()
