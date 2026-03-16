@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">OperatoR</string>
+    <string name="accessibility_service_label">OperateR Accessibility Bridge</string>
+    <string name="accessibility_service_description">Allows OperateR to observe on-screen UI structure for user-approved task execution.</string>
 </resources>
