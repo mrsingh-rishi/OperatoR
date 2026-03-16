@@ -7,8 +7,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.rishi.operater.ui.home.HomeScreen
-import com.rishi.operater.ui.settings.SettingsScreen
 import com.rishi.operater.ui.session.SessionScreen
+import com.rishi.operater.ui.settings.SettingsScreen
 
 @Composable
 fun AppNavGraph(

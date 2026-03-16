@@ -11,7 +11,7 @@ import android.view.accessibility.AccessibilityEvent
  * - extract semantic UI signals for planning
  * - expose sanitized state to the local agent session manager
  */
-class OperateRAccessibilityService : AccessibilityService() {
+class OperatoRAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         // Intentionally blank until semantic UI observation is implemented.
