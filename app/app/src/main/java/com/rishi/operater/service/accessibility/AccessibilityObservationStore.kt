@@ -17,16 +17,21 @@ object AccessibilityObservationStore : AccessibilitySemanticReader {
     override fun currentSnapshot(): ScreenSemanticSnapshot = _snapshot.value
 
     fun onServiceConnectionChanged(connected: Boolean) {
-        val current = _snapshot.value
-        _snapshot.value = current.copy(
-            appState = current.appState.copy(accessibilityServiceConnected = connected),
-            capturedAtMillis = System.currentTimeMillis()
-        )
+        _snapshot.value = if (connected) {
+            val current = _snapshot.value
+            current.copy(
+                appState = current.appState.copy(accessibilityServiceConnected = true),
+                capturedAtMillis = System.currentTimeMillis(),
+            )
+        } else {
+            ScreenSemanticSnapshot()
+        }
     }
 
     fun updateSnapshot(
         foregroundPackageName: String?,
         rootNodeAvailable: Boolean,
+        lastEventType: Int?,
         nodeSummary: NodeInfoSummary,
     ) {
         _snapshot.value = ScreenSemanticSnapshot(
@@ -34,10 +39,10 @@ object AccessibilityObservationStore : AccessibilitySemanticReader {
                 accessibilityServiceConnected = true,
                 foregroundPackageName = foregroundPackageName,
                 rootNodeAvailable = rootNodeAvailable,
+                lastEventType = lastEventType,
             ),
             nodeSummary = nodeSummary,
             capturedAtMillis = System.currentTimeMillis(),
         )
     }
 }
-
