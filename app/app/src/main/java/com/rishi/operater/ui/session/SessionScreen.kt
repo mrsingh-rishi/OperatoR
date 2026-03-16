@@ -38,13 +38,19 @@ fun SessionScreen(
         Text("Current action: ${uiState.currentAction}")
         Text("State: ${uiState.sessionState.name}")
         Text(
-            "Gemini Live reasoning and action executor are intentionally not implemented in this phase.",
+            text = "Gemini Live execution is intentionally deferred; this layer keeps session contracts ready.",
             style = MaterialTheme.typography.bodySmall
         )
 
-        Card(modifier = Modifier.weight(1f).fillMaxWidth()) {
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(12.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(uiState.logs) { log ->
@@ -53,11 +59,14 @@ fun SessionScreen(
             }
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = viewModel::stopSession) {
-                Text("Stop Session")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Button(onClick = viewModel::stopSession, modifier = Modifier.weight(1f)) {
+                Text("Stop")
             }
-            Button(onClick = onBack) {
+            Button(onClick = onBack, modifier = Modifier.weight(1f)) {
                 Text("Back")
             }
         }

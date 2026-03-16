@@ -32,34 +32,38 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("Settings", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "These toggles define local behavior only. Live model integration will plug into the same state.",
+            style = MaterialTheme.typography.bodySmall
+        )
 
         SettingRow(
-            title = "Confirmation mode",
+            title = "Require confirmation",
             checked = uiState.confirmationMode,
             onCheckedChange = viewModel::setConfirmationMode
         )
         SettingRow(
-            title = "Debug mode",
+            title = "Enable debug mode",
             checked = uiState.debugMode,
             onCheckedChange = viewModel::setDebugMode
         )
         SettingRow(
-            title = "Multimodal capture enabled",
+            title = "Enable multimodal capture",
             checked = uiState.multimodalCaptureEnabled,
             onCheckedChange = viewModel::setMultimodalCaptureEnabled
         )
         SettingRow(
-            title = "Audio reply enabled",
+            title = "Enable audio responses",
             checked = uiState.audioReplyEnabled,
             onCheckedChange = viewModel::setAudioReplyEnabled
         )
         SettingRow(
-            title = "Local storage enabled",
+            title = "Enable local storage",
             checked = uiState.localStorageEnabled,
             onCheckedChange = viewModel::setLocalStorageEnabled
         )
 
-        Button(onClick = onBack) {
+        Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
             Text("Back")
         }
     }
