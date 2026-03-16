@@ -5,7 +5,6 @@ package com.rishi.operater.service.accessibility.model
  */
 data class ScreenSemanticSnapshot(
     val appState: CurrentAppState = CurrentAppState(),
-    val nodeSummary: NodeInfoSummary = NodeInfoSummary(),
+    val screenModel: ScreenModel = ScreenModel(),
     val capturedAtMillis: Long = System.currentTimeMillis(),
 )
-

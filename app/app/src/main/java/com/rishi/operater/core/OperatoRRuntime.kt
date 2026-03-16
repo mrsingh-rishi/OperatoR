@@ -1,6 +1,7 @@
 package com.rishi.operater.core
 
 import com.rishi.operater.agent.session.AgentSessionManager
+import com.rishi.operater.data.repository.ScreenModelRepository
 import com.rishi.operater.data.repository.SessionRepository
 import com.rishi.operater.service.accessibility.AccessibilityObservationStore
 import com.rishi.operater.service.accessibility.AccessibilitySemanticReader
@@ -19,4 +20,5 @@ object OperatoRRuntime {
     val screenCaptureController: ScreenCaptureController = ScreenCaptureController()
     val audioController: AudioController = AudioController()
     val accessibilityReader: AccessibilitySemanticReader = AccessibilityObservationStore
+    val screenModelRepository: ScreenModelRepository = ScreenModelRepository(accessibilityReader)
 }

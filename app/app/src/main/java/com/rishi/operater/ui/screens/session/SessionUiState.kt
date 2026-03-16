@@ -7,8 +7,9 @@ data class SessionUiState(
     val accessibilityConnected: Boolean = false,
     val foregroundPackageName: String? = null,
     val rootNodeAvailable: Boolean = false,
-    val totalNodes: Int = 0,
-    val clickableNodes: Int = 0,
-    val editableNodes: Int = 0,
-    val nodesWithText: Int = 0,
+    val screenPackageName: String? = null,
+    val visibleTextLabels: List<String> = emptyList(),
+    val clickableSummary: String = "None",
+    val editableSummary: String = "None",
+    val focusedNodeSummary: String = "None",
 )
