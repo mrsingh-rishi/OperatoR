@@ -14,4 +14,8 @@ data class SessionUiState(
     val focusedNodeSummary: String = "None",
     val isScreenCaptureSupported: Boolean = false,
     val isScreenCaptureReady: Boolean = false,
+    val isCapturePipelineReady: Boolean = false,
+    val isFrameCaptureInProgress: Boolean = false,
+    val captureCount: Int = 0,
+    val lastFrameSummary: String = "No frame captured yet",
 )
