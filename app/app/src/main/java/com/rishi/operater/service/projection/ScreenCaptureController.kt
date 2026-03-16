@@ -3,9 +3,11 @@ package com.rishi.operater.service.projection
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
+import android.media.Image
 import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
@@ -13,16 +15,16 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
+import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 data class ScreenCapturePermissionState(
     val isSupported: Boolean,
@@ -37,6 +39,11 @@ data class FrameCaptureMetadata(
     val pixelStride: Int,
 )
 
+data class CapturedFrame(
+    val metadata: FrameCaptureMetadata,
+    val bitmap: Bitmap,
+)
+
 data class FrameCaptureState(
     val isPipelineReady: Boolean = false,
     val isCaptureInProgress: Boolean = false,
@@ -48,9 +55,6 @@ data class FrameCaptureState(
 
 /**
  * Coordinates MediaProjection permission state and one-shot frame capture.
- *
- * This implementation intentionally captures metadata-only frames on demand.
- * No continuous streaming, OCR, or external model integration is performed.
  */
 class ScreenCaptureController(context: Context) {
     private val appContext = context.applicationContext
@@ -85,6 +89,9 @@ class ScreenCaptureController(context: Context) {
 
     private val _frameCaptureState = MutableStateFlow(FrameCaptureState())
     val frameCaptureState: StateFlow<FrameCaptureState> = _frameCaptureState.asStateFlow()
+
+    private val _lastCapturedFrame = MutableStateFlow<CapturedFrame?>(null)
+    val lastCapturedFrame: StateFlow<CapturedFrame?> = _lastCapturedFrame.asStateFlow()
 
     fun createPermissionIntent(): Intent? = mediaProjectionManager?.createScreenCaptureIntent()
 
@@ -128,25 +135,18 @@ class ScreenCaptureController(context: Context) {
             lastFailureReason = null,
         )
 
-        val metadata = withContext(Dispatchers.Default) {
+        val frame = withContext(Dispatchers.Default) {
             withTimeoutOrNull(CAPTURE_TIMEOUT_MS) {
-                suspendCancellableCoroutine<FrameCaptureMetadata?> { continuation ->
+                suspendCancellableCoroutine<CapturedFrame?> { continuation ->
                     val listener = ImageReader.OnImageAvailableListener { sourceReader ->
                         val image = sourceReader.acquireLatestImage() ?: return@OnImageAvailableListener
 
                         sourceReader.setOnImageAvailableListener(null, null)
-                        val plane = image.planes.firstOrNull()
-                        val frameMetadata = FrameCaptureMetadata(
-                            timestampNanos = image.timestamp,
-                            width = image.width,
-                            height = image.height,
-                            rowStride = plane?.rowStride ?: 0,
-                            pixelStride = plane?.pixelStride ?: 0,
-                        )
+                        val capturedFrame = image.toCapturedFrame()
                         image.close()
 
                         if (continuation.isActive) {
-                            continuation.resume(frameMetadata)
+                            continuation.resume(capturedFrame)
                         }
                     }
 
@@ -158,13 +158,14 @@ class ScreenCaptureController(context: Context) {
             }
         }
 
-        return if (metadata != null) {
+        return if (frame != null) {
+            _lastCapturedFrame.value = frame
             _frameCaptureState.value = _frameCaptureState.value.copy(
                 isCaptureInProgress = false,
                 captureCount = _frameCaptureState.value.captureCount + 1,
                 lastCaptureSucceeded = true,
                 lastFailureReason = null,
-                lastFrameMetadata = metadata,
+                lastFrameMetadata = frame.metadata,
             )
             true
         } else {
@@ -250,10 +251,37 @@ class ScreenCaptureController(context: Context) {
         virtualDisplay?.release()
         virtualDisplay = null
 
+        _lastCapturedFrame.value = null
         _frameCaptureState.value = _frameCaptureState.value.copy(
             isPipelineReady = false,
             isCaptureInProgress = false,
         )
+    }
+
+    private fun Image.toCapturedFrame(): CapturedFrame {
+        val plane = planes.firstOrNull()
+        val rowStride = plane?.rowStride ?: 0
+        val pixelStride = plane?.pixelStride ?: 0
+
+        val metadata = FrameCaptureMetadata(
+            timestampNanos = timestamp,
+            width = width,
+            height = height,
+            rowStride = rowStride,
+            pixelStride = pixelStride,
+        )
+
+        val bitmapWidth = if (pixelStride > 0) rowStride / pixelStride else width
+        val bitmap = Bitmap.createBitmap(bitmapWidth.coerceAtLeast(width), height, Bitmap.Config.ARGB_8888)
+        plane?.buffer?.rewind()
+        plane?.buffer?.let { buffer ->
+            bitmap.copyPixelsFromBuffer(buffer)
+        }
+
+        val cropped = Bitmap.createBitmap(bitmap, 0, 0, width, height)
+        bitmap.recycle()
+
+        return CapturedFrame(metadata = metadata, bitmap = cropped)
     }
 
     companion object {
