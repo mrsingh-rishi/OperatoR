@@ -105,5 +105,24 @@ fun SessionScreen(
             text = "Visible text labels: $labelsText",
             style = MaterialTheme.typography.bodyMedium,
         )
+
+        val ocrText = if (uiState.ocrLines.isEmpty()) {
+            "None"
+        } else {
+            uiState.ocrLines.take(8).joinToString(separator = " • ")
+        }
+
+        Text(
+            text = "OCR status: ${uiState.ocrStatus}",
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Text(
+            text = "OCR text: $ocrText",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(
+            text = "Combined summary: ${uiState.combinedScreenSummary}",
+            style = MaterialTheme.typography.bodyMedium,
+        )
     }
 }

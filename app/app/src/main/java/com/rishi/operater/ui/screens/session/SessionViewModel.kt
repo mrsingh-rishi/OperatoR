@@ -6,6 +6,7 @@ import com.rishi.operater.agent.model.AgentSessionState
 import com.rishi.operater.core.OperatoRRuntime
 import com.rishi.operater.service.accessibility.model.NodeCollectionSummary
 import com.rishi.operater.service.accessibility.model.NodeDescriptor
+import com.rishi.operater.service.ocr.OcrProcessingState
 import com.rishi.operater.service.projection.FrameCaptureState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +20,8 @@ class SessionViewModel : ViewModel() {
         OperatoRRuntime.screenModelRepository.latestScreenModel,
         OperatoRRuntime.screenCaptureController.permissionState,
         OperatoRRuntime.screenCaptureController.frameCaptureState,
-    ) { snapshot, screenModel, screenCaptureState, frameCaptureState ->
+        OperatoRRuntime.ocrRepository.processingState,
+    ) { snapshot, screenModel, screenCaptureState, frameCaptureState, ocrState ->
         SessionUiState(
             status = when (OperatoRRuntime.sessionManager.state.value) {
                 AgentSessionState.Idle,
@@ -37,6 +39,12 @@ class SessionViewModel : ViewModel() {
             rootNodeAvailable = snapshot.appState.rootNodeAvailable,
             screenPackageName = screenModel.packageName,
             visibleTextLabels = screenModel.visibleTextLabels,
+            ocrLines = ocrState.lastResult?.lines.orEmpty(),
+            ocrStatus = summarizeOcrState(ocrState),
+            combinedScreenSummary = combineSummaries(
+                accessibilityLabels = screenModel.visibleTextLabels,
+                ocrLines = ocrState.lastResult?.lines.orEmpty(),
+            ),
             clickableSummary = summarizeCollection(screenModel.clickableNodes),
             editableSummary = summarizeCollection(screenModel.editableNodes),
             focusedNodeSummary = summarizeNode(screenModel.focusedNode),
@@ -56,7 +64,13 @@ class SessionViewModel : ViewModel() {
 
     fun captureFrame() {
         viewModelScope.launch {
-            OperatoRRuntime.screenCaptureController.captureFrame()
+            val captured = OperatoRRuntime.screenCaptureController.captureFrame()
+            if (!captured) {
+                return@launch
+            }
+
+            val latestFrame = OperatoRRuntime.screenCaptureController.lastCapturedFrame.value ?: return@launch
+            OperatoRRuntime.ocrRepository.processBitmap(latestFrame.bitmap)
         }
     }
 
@@ -95,5 +109,31 @@ class SessionViewModel : ViewModel() {
 
         return "${metadata.width}x${metadata.height}, rowStride=${metadata.rowStride}, " +
             "pixelStride=${metadata.pixelStride}, ts=${metadata.timestampNanos}"
+    }
+
+    private fun summarizeOcrState(state: OcrProcessingState): String {
+        return when {
+            state.isProcessing -> "Processing"
+            state.lastFailureReason != null -> "Failed: ${state.lastFailureReason}"
+            state.lastResult != null -> "Ready (${state.lastResult.lines.size} lines)"
+            else -> "Not run yet"
+        }
+    }
+
+    private fun combineSummaries(
+        accessibilityLabels: List<String>,
+        ocrLines: List<String>,
+    ): String {
+        val combined = (accessibilityLabels + ocrLines)
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .take(12)
+
+        return if (combined.isEmpty()) {
+            "None"
+        } else {
+            combined.joinToString(separator = " • ")
+        }
     }
 }
