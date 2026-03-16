@@ -4,13 +4,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rishi.operater.agent.model.AgentSessionState
 import com.rishi.operater.core.OperatoRRuntime
+import com.rishi.operater.service.accessibility.model.NodeCollectionSummary
+import com.rishi.operater.service.accessibility.model.NodeDescriptor
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 class SessionViewModel : ViewModel() {
-    val uiState: StateFlow<SessionUiState> = OperatoRRuntime.accessibilityReader.snapshot.map { snapshot ->
+    val uiState: StateFlow<SessionUiState> = combine(
+        OperatoRRuntime.accessibilityReader.snapshot,
+        OperatoRRuntime.screenModelRepository.latestScreenModel,
+    ) { snapshot, screenModel ->
         SessionUiState(
             status = when (OperatoRRuntime.sessionManager.state.value) {
                 AgentSessionState.Idle,
@@ -26,15 +31,43 @@ class SessionViewModel : ViewModel() {
             accessibilityConnected = snapshot.appState.accessibilityServiceConnected,
             foregroundPackageName = snapshot.appState.foregroundPackageName,
             rootNodeAvailable = snapshot.appState.rootNodeAvailable,
-            totalNodes = snapshot.nodeSummary.totalNodes,
-            clickableNodes = snapshot.nodeSummary.clickableNodes,
-            editableNodes = snapshot.nodeSummary.editableNodes,
-            nodesWithText = snapshot.nodeSummary.nodesWithText,
+            screenPackageName = screenModel.packageName,
+            visibleTextLabels = screenModel.visibleTextLabels,
+            clickableSummary = summarizeCollection(screenModel.clickableNodes),
+            editableSummary = summarizeCollection(screenModel.editableNodes),
+            focusedNodeSummary = summarizeNode(screenModel.focusedNode),
         )
-    )
+    }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
             initialValue = SessionUiState(),
         )
+
+    private fun summarizeCollection(summary: NodeCollectionSummary): String {
+        if (summary.totalCount == 0) {
+            return "None"
+        }
+
+        val samples = summary.samples
+            .take(3)
+            .joinToString(separator = " · ") { summarizeNode(it) }
+
+        return if (samples.isBlank()) {
+            "${summary.totalCount} nodes"
+        } else {
+            "${summary.totalCount} nodes ($samples)"
+        }
+    }
+
+    private fun summarizeNode(node: NodeDescriptor?): String {
+        if (node == null) {
+            return "None"
+        }
+
+        return node.label
+            ?: node.viewIdResourceName
+            ?: node.className
+            ?: "Unnamed node"
+    }
 }

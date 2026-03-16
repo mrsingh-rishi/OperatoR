@@ -37,9 +37,32 @@ fun SessionScreen(
             text = "Root node available: ${if (uiState.rootNodeAvailable) "Yes" else "No"}",
             style = MaterialTheme.typography.bodyLarge,
         )
+
         Text(
-            text = "Screen nodes: ${uiState.totalNodes} total, ${uiState.clickableNodes} clickable, " +
-                "${uiState.editableNodes} editable, ${uiState.nodesWithText} with text",
+            text = "Screen model package: ${uiState.screenPackageName ?: "Unknown"}",
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Text(
+            text = "Clickable: ${uiState.clickableSummary}",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(
+            text = "Editable: ${uiState.editableSummary}",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(
+            text = "Focused node: ${uiState.focusedNodeSummary}",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+
+        val labelsText = if (uiState.visibleTextLabels.isEmpty()) {
+            "None"
+        } else {
+            uiState.visibleTextLabels.take(8).joinToString(separator = " • ")
+        }
+
+        Text(
+            text = "Visible text labels: $labelsText",
             style = MaterialTheme.typography.bodyMedium,
         )
     }

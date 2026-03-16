@@ -1,7 +1,7 @@
 package com.rishi.operater.service.accessibility
 
 import com.rishi.operater.service.accessibility.model.CurrentAppState
-import com.rishi.operater.service.accessibility.model.NodeInfoSummary
+import com.rishi.operater.service.accessibility.model.ScreenModel
 import com.rishi.operater.service.accessibility.model.ScreenSemanticSnapshot
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +32,7 @@ object AccessibilityObservationStore : AccessibilitySemanticReader {
         foregroundPackageName: String?,
         rootNodeAvailable: Boolean,
         lastEventType: Int?,
-        nodeSummary: NodeInfoSummary,
+        screenModel: ScreenModel,
     ) {
         _snapshot.value = ScreenSemanticSnapshot(
             appState = CurrentAppState(
@@ -41,7 +41,7 @@ object AccessibilityObservationStore : AccessibilitySemanticReader {
                 rootNodeAvailable = rootNodeAvailable,
                 lastEventType = lastEventType,
             ),
-            nodeSummary = nodeSummary,
+            screenModel = screenModel,
             capturedAtMillis = System.currentTimeMillis(),
         )
     }
