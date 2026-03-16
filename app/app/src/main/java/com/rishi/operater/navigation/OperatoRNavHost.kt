@@ -28,7 +28,9 @@ import com.rishi.operater.ui.screens.settings.SettingsScreen
 import com.rishi.operater.ui.screens.settings.SettingsViewModel
 
 @Composable
-fun OperatoRNavHost() {
+fun OperatoRNavHost(
+    onRequestScreenCapturePermission: () -> Unit,
+) {
     val navController = rememberNavController()
 
     Scaffold(
@@ -77,11 +79,18 @@ fun OperatoRNavHost() {
             composable(route = AppDestination.Session.route) {
                 val viewModel: SessionViewModel = viewModel()
                 val uiState by viewModel.uiState.collectAsState()
-                SessionScreen(uiState = uiState)
+                SessionScreen(
+                    uiState = uiState,
+                    onRequestScreenCapturePermission = onRequestScreenCapturePermission,
+                )
             }
             composable(route = AppDestination.Settings.route) {
                 val viewModel: SettingsViewModel = viewModel()
-                SettingsScreen(uiState = viewModel.uiState)
+                val uiState by viewModel.uiState.collectAsState()
+                SettingsScreen(
+                    uiState = uiState,
+                    onRequestScreenCapturePermission = onRequestScreenCapturePermission,
+                )
             }
         }
     }

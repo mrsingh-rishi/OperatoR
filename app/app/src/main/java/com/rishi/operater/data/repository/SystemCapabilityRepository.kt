@@ -64,7 +64,13 @@ class SystemCapabilityRepository(
             return ScreenCaptureCapabilityStatus.UNAVAILABLE
         }
 
-        return if (screenCaptureController.isCapturing) {
+        val state = screenCaptureController.permissionState.value
+
+        if (!state.isSupported) {
+            return ScreenCaptureCapabilityStatus.UNAVAILABLE
+        }
+
+        return if (state.isPermissionGranted) {
             ScreenCaptureCapabilityStatus.ACTIVE
         } else {
             ScreenCaptureCapabilityStatus.READY

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,6 +14,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SessionScreen(
     uiState: SessionUiState,
+    onRequestScreenCapturePermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -24,6 +26,19 @@ fun SessionScreen(
         Text(text = uiState.title, style = MaterialTheme.typography.headlineMedium)
         Text(text = "Status: ${uiState.status}", style = MaterialTheme.typography.titleMedium)
         Text(text = uiState.details, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = "Screen capture supported: ${if (uiState.isScreenCaptureSupported) "Yes" else "No"}",
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Text(
+            text = "Screen capture ready: ${if (uiState.isScreenCaptureReady) "Yes" else "No"}",
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        if (uiState.isScreenCaptureSupported && !uiState.isScreenCaptureReady) {
+            Button(onClick = onRequestScreenCapturePermission) {
+                Text(text = "Grant screen capture permission")
+            }
+        }
 
         Text(
             text = "Accessibility connected: ${if (uiState.accessibilityConnected) "Yes" else "No"}",
