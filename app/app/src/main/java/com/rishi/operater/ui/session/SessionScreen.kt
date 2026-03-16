@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rishi.operater.data.model.PermissionStatus
 
 @Composable
 fun SessionScreen(
@@ -35,12 +36,25 @@ fun SessionScreen(
         Text("Session", style = MaterialTheme.typography.headlineMedium)
         Text("Task: ${uiState.task}")
         Text("Current app: ${uiState.currentPackage}")
+        Text("Accessibility permission: ${uiState.accessibilityStatus.name}")
+        Text("Root node available: ${uiState.rootNodeAvailable}")
+        Text(
+            "Screen summary: ${uiState.totalNodes} nodes (${uiState.nodesWithText} with text, ${uiState.clickableNodes} clickable, ${uiState.editableNodes} editable)"
+        )
         Text("Current action: ${uiState.currentAction}")
         Text("State: ${uiState.sessionState.name}")
-        Text(
-            text = "Gemini Live execution is intentionally deferred; this layer keeps session contracts ready.",
-            style = MaterialTheme.typography.bodySmall
-        )
+        if (uiState.accessibilityStatus != PermissionStatus.GRANTED) {
+            Text(
+                text = "Enable OperateR Accessibility Bridge in Android Accessibility settings to observe the foreground app.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        } else {
+            Text(
+                text = "Accessibility observation is active and read-only. No taps, typing, or gestures are performed.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
 
         Card(
             modifier = Modifier
