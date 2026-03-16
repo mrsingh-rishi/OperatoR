@@ -15,7 +15,8 @@ class SessionViewModel : ViewModel() {
     val uiState: StateFlow<SessionUiState> = combine(
         OperatoRRuntime.accessibilityReader.snapshot,
         OperatoRRuntime.screenModelRepository.latestScreenModel,
-    ) { snapshot, screenModel ->
+        OperatoRRuntime.screenCaptureController.permissionState,
+    ) { snapshot, screenModel, screenCaptureState ->
         SessionUiState(
             status = when (OperatoRRuntime.sessionManager.state.value) {
                 AgentSessionState.Idle,
@@ -36,6 +37,8 @@ class SessionViewModel : ViewModel() {
             clickableSummary = summarizeCollection(screenModel.clickableNodes),
             editableSummary = summarizeCollection(screenModel.editableNodes),
             focusedNodeSummary = summarizeNode(screenModel.focusedNode),
+            isScreenCaptureSupported = screenCaptureState.isSupported,
+            isScreenCaptureReady = screenCaptureState.isPermissionGranted,
         )
     }
         .stateIn(

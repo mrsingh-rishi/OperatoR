@@ -1,5 +1,6 @@
 package com.rishi.operater.core
 
+import android.content.Context
 import com.rishi.operater.agent.session.AgentSessionManager
 import com.rishi.operater.data.repository.ScreenModelRepository
 import com.rishi.operater.data.repository.SessionRepository
@@ -15,10 +16,22 @@ import com.rishi.operater.service.projection.ScreenCaptureController
  * without introducing DI framework complexity in this foundation phase.
  */
 object OperatoRRuntime {
+    private var initialized = false
+
     val sessionManager: AgentSessionManager = AgentSessionManager()
     val sessionRepository: SessionRepository = SessionRepository()
-    val screenCaptureController: ScreenCaptureController = ScreenCaptureController()
+    lateinit var screenCaptureController: ScreenCaptureController
+        private set
     val audioController: AudioController = AudioController()
     val accessibilityReader: AccessibilitySemanticReader = AccessibilityObservationStore
     val screenModelRepository: ScreenModelRepository = ScreenModelRepository(accessibilityReader)
+
+    fun initialize(context: Context) {
+        if (initialized) {
+            return
+        }
+
+        screenCaptureController = ScreenCaptureController(context)
+        initialized = true
+    }
 }

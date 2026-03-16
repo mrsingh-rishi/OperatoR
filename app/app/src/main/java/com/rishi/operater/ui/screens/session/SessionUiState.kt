@@ -12,4 +12,6 @@ data class SessionUiState(
     val clickableSummary: String = "None",
     val editableSummary: String = "None",
     val focusedNodeSummary: String = "None",
+    val isScreenCaptureSupported: Boolean = false,
+    val isScreenCaptureReady: Boolean = false,
 )
