@@ -82,6 +82,7 @@ fun OperatoRNavHost(
                 SessionScreen(
                     uiState = uiState,
                     onRequestScreenCapturePermission = onRequestScreenCapturePermission,
+                    onCaptureFrame = viewModel::captureFrame,
                 )
             }
             composable(route = AppDestination.Settings.route) {

@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 fun SessionScreen(
     uiState: SessionUiState,
     onRequestScreenCapturePermission: () -> Unit,
+    onCaptureFrame: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -34,10 +35,34 @@ fun SessionScreen(
             text = "Screen capture ready: ${if (uiState.isScreenCaptureReady) "Yes" else "No"}",
             style = MaterialTheme.typography.bodyLarge,
         )
+        Text(
+            text = "Capture pipeline ready: ${if (uiState.isCapturePipelineReady) "Yes" else "No"}",
+            style = MaterialTheme.typography.bodyLarge,
+        )
         if (uiState.isScreenCaptureSupported && !uiState.isScreenCaptureReady) {
             Button(onClick = onRequestScreenCapturePermission) {
                 Text(text = "Grant screen capture permission")
             }
+        }
+
+        if (uiState.isCapturePipelineReady) {
+            Button(onClick = onCaptureFrame, enabled = !uiState.isFrameCaptureInProgress) {
+                Text(
+                    text = if (uiState.isFrameCaptureInProgress) {
+                        "Capturing..."
+                    } else {
+                        "Capture one frame"
+                    },
+                )
+            }
+            Text(
+                text = "Captured frames: ${uiState.captureCount}",
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Text(
+                text = "Last frame: ${uiState.lastFrameSummary}",
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
 
         Text(

@@ -6,17 +6,20 @@ import com.rishi.operater.agent.model.AgentSessionState
 import com.rishi.operater.core.OperatoRRuntime
 import com.rishi.operater.service.accessibility.model.NodeCollectionSummary
 import com.rishi.operater.service.accessibility.model.NodeDescriptor
+import com.rishi.operater.service.projection.FrameCaptureState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class SessionViewModel : ViewModel() {
     val uiState: StateFlow<SessionUiState> = combine(
         OperatoRRuntime.accessibilityReader.snapshot,
         OperatoRRuntime.screenModelRepository.latestScreenModel,
         OperatoRRuntime.screenCaptureController.permissionState,
-    ) { snapshot, screenModel, screenCaptureState ->
+        OperatoRRuntime.screenCaptureController.frameCaptureState,
+    ) { snapshot, screenModel, screenCaptureState, frameCaptureState ->
         SessionUiState(
             status = when (OperatoRRuntime.sessionManager.state.value) {
                 AgentSessionState.Idle,
@@ -39,6 +42,10 @@ class SessionViewModel : ViewModel() {
             focusedNodeSummary = summarizeNode(screenModel.focusedNode),
             isScreenCaptureSupported = screenCaptureState.isSupported,
             isScreenCaptureReady = screenCaptureState.isPermissionGranted,
+            isCapturePipelineReady = frameCaptureState.isPipelineReady,
+            isFrameCaptureInProgress = frameCaptureState.isCaptureInProgress,
+            captureCount = frameCaptureState.captureCount,
+            lastFrameSummary = summarizeFrame(frameCaptureState),
         )
     }
         .stateIn(
@@ -46,6 +53,12 @@ class SessionViewModel : ViewModel() {
             started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
             initialValue = SessionUiState(),
         )
+
+    fun captureFrame() {
+        viewModelScope.launch {
+            OperatoRRuntime.screenCaptureController.captureFrame()
+        }
+    }
 
     private fun summarizeCollection(summary: NodeCollectionSummary): String {
         if (summary.totalCount == 0) {
@@ -72,5 +85,15 @@ class SessionViewModel : ViewModel() {
             ?: node.viewIdResourceName
             ?: node.className
             ?: "Unnamed node"
+    }
+
+    private fun summarizeFrame(state: FrameCaptureState): String {
+        val metadata = state.lastFrameMetadata
+        if (metadata == null) {
+            return state.lastFailureReason ?: "No frame captured yet"
+        }
+
+        return "${metadata.width}x${metadata.height}, rowStride=${metadata.rowStride}, " +
+            "pixelStride=${metadata.pixelStride}, ts=${metadata.timestampNanos}"
     }
 }
