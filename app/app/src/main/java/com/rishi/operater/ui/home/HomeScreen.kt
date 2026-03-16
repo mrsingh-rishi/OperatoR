@@ -11,13 +11,19 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rishi.operater.data.model.AgentLifecycleStatus
 import com.rishi.operater.data.model.PermissionStatus
+import com.rishi.operater.data.model.ScreenCaptureCapabilityStatus
 
 @Composable
 fun HomeScreen(
@@ -26,6 +32,13 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.refreshStatus()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -58,7 +71,7 @@ fun HomeScreen(
         StatusCard("Accessibility service", uiState.accessibilityStatus.toDisplayText())
         StatusCard("Screen capture", uiState.screenCaptureStatus.toDisplayText())
         StatusCard("Audio permission", uiState.audioPermissionStatus.toDisplayText())
-        StatusCard("Session state", uiState.sessionState.name)
+        StatusCard("Session state", uiState.sessionStatus.toDisplayText())
     }
 }
 
@@ -79,4 +92,16 @@ private fun PermissionStatus.toDisplayText(): String = when (this) {
     PermissionStatus.NOT_REQUESTED -> "Not requested"
     PermissionStatus.GRANTED -> "Granted"
     PermissionStatus.DENIED -> "Denied"
+}
+
+private fun ScreenCaptureCapabilityStatus.toDisplayText(): String = when (this) {
+    ScreenCaptureCapabilityStatus.READY -> "Ready (not capturing)"
+    ScreenCaptureCapabilityStatus.ACTIVE -> "Active"
+    ScreenCaptureCapabilityStatus.UNAVAILABLE -> "Unavailable"
+}
+
+private fun AgentLifecycleStatus.toDisplayText(): String = when (this) {
+    AgentLifecycleStatus.IDLE -> "Idle"
+    AgentLifecycleStatus.RUNNING -> "Running"
+    AgentLifecycleStatus.STOPPED -> "Stopped"
 }
